@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>各縣市街頭藝人展演空間與發證數量之城鄉差異</title>
+<title>臺北市街頭藝人展演類別與趨勢分析</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
 <script src="data.js"></script>
 <style>
@@ -18,15 +18,16 @@
     --axis: #c3c2b7;
     --border: rgba(11, 11, 11, 0.10);
     --accent: #2a78d6;
+    --bar: #2a78d6;
+    --bar-flag: #86b6ef;
     --up: #006300;
     --down: #d03b3b;
-    /* 類別：音樂、表演藝術、視覺與工藝（固定順序） */
+    --warn: #b26b00;
+    /* 開放組合（固定順序） */
     --cat-1: #2a78d6;
     --cat-2: #eb6834;
     --cat-3: #1baf7a;
-    /* 年度：同一色相的深淺，新年度較深 */
-    --year-old: #86b6ef;
-    --year-new: #2a78d6;
+    --cat-4: #eda100;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -40,13 +41,15 @@
       --axis: #383835;
       --border: rgba(255, 255, 255, 0.10);
       --accent: #3987e5;
+      --bar: #3987e5;
+      --bar-flag: #184f95;
       --up: #0ca30c;
       --down: #e66767;
+      --warn: #fab219;
       --cat-1: #3987e5;
       --cat-2: #d95926;
       --cat-3: #199e70;
-      --year-old: #184f95;
-      --year-new: #3987e5;
+      --cat-4: #c98500;
     }
   }
 
@@ -72,26 +75,31 @@
 
   /* 全局篩選器 */
   .filters {
-    display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end;
+    display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-end;
     margin: 20px 0 16px;
   }
   .filters label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--text-secondary); }
   .filters select {
     font: inherit; font-size: 1rem; color: var(--text-primary);
     background: var(--page); border: 1px solid var(--axis); border-radius: 8px;
-    padding: 6px 32px 6px 12px; min-width: 140px;
+    padding: 6px 28px 6px 12px; min-width: 110px;
   }
   .filters select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .filters .note { font-size: 0.85rem; color: var(--text-muted); margin-left: auto; }
+  .filters .range { display: flex; align-items: center; gap: 6px; }
+  .filters .range span { color: var(--text-muted); }
 
   /* KPI */
-  .kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px; }
-  .kpi .label { font-size: 0.9rem; color: var(--text-secondary); }
-  .kpi .value { font-size: 2.25rem; font-weight: 700; line-height: 1.2; margin: 4px 0; }
-  .kpi .value small { font-size: 1rem; font-weight: 400; color: var(--text-secondary); margin-left: 4px; }
-  .kpi .sub { font-size: 0.85rem; color: var(--text-muted); min-height: 1.4em; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+  .kpi .label { font-size: 0.85rem; color: var(--text-secondary); }
+  .kpi .value { font-size: 2rem; font-weight: 700; line-height: 1.2; margin: 4px 0; }
+  .kpi .value small { font-size: 0.95rem; font-weight: 400; color: var(--text-secondary); margin-left: 4px; }
+  .kpi .sub { font-size: 0.8rem; color: var(--text-muted); }
   .kpi .up { color: var(--up); }
   .kpi .down { color: var(--down); }
+  .kpi .tag {
+    display: inline-block; font-size: 0.7rem; padding: 0 6px; border-radius: 4px;
+    border: 1px solid var(--axis); color: var(--text-secondary); margin-left: 4px; vertical-align: 2px;
+  }
 
   /* 圖表 */
   .charts { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; }
@@ -99,30 +107,37 @@
   .chart-card .desc { font-size: 0.85rem; color: var(--text-secondary); margin: 2px 0 0; }
   .chart { width: 100%; height: 380px; }
   .chart-card .foot { font-size: 0.8rem; color: var(--text-muted); margin: 4px 0 0; }
+  .chart-card .foot .warn { color: var(--warn); }
 
   /* 資料表 */
   details { margin-top: 16px; }
   summary { cursor: pointer; font-weight: 600; }
   .table-scroll { overflow-x: auto; margin-top: 12px; }
-  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.88rem; font-variant-numeric: tabular-nums; }
   th, td { padding: 6px 10px; border-bottom: 1px solid var(--grid); text-align: right; white-space: nowrap; }
-  th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
   th { color: var(--text-secondary); font-weight: 600; }
-  tfoot td { font-weight: 700; border-top: 1px solid var(--axis); }
+  .t-left { text-align: left; }
+  td.wrap-cell { white-space: normal; min-width: 180px; text-align: left; color: var(--text-secondary); }
 
   footer { margin-top: 24px; font-size: 0.9rem; color: var(--text-secondary); }
   footer h2 { font-size: 1rem; color: var(--text-primary); margin: 0 0 8px; }
-  footer dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; }
+  footer dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; }
   footer dt { font-weight: 600; color: var(--text-primary); }
   footer dd { margin: 0; }
+  footer ul { margin: 0; padding-left: 1.2em; }
+  footer a { color: var(--accent); }
 
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .charts { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
     .wrap { padding: 16px 12px 32px; }
     header h1 { font-size: 1.25rem; }
-    .kpis, .charts { grid-template-columns: 1fr; }
-    .filters label { flex: 1 1 140px; }
+    .kpis { grid-template-columns: 1fr; }
+    .filters label { flex: 1 1 100%; }
     .filters select { width: 100%; }
-    .filters .note { margin-left: 0; }
+    .filters .range select { flex: 1; min-width: 0; }
     .chart { height: 320px; }
     footer dl { grid-template-columns: 1fr; gap: 0; }
     footer dd { margin-bottom: 8px; }
@@ -133,74 +148,120 @@
 <div class="wrap">
 
   <header>
-    <h1>各縣市街頭藝人展演空間與發證數量之城鄉差異</h1>
-    <p>111–112 年度，6 個縣市的展演場地數與街頭藝人發證數</p>
+    <h1>臺北市街頭藝人展演類別與趨勢分析</h1>
+    <p>街頭藝人有效證照、表演場地的歷年變化，以及各場地開放的表演類別</p>
   </header>
 
   <section class="filters card" aria-label="全局篩選器">
-    <label>年度
-      <select id="f-year">
-        <option value="all">全部</option>
+    <label>年度區間
+      <span class="range">
+        <select id="f-from" aria-label="起始年度"></select>
+        <span>至</span>
+        <select id="f-to" aria-label="結束年度"></select>
+      </span>
+    </label>
+    <label>趨勢指標
+      <select id="f-metric">
+        <option value="licences">有效證照數</option>
+        <option value="venues">表演場地數</option>
+        <option value="licences_per_venue">每處場地平均證照數</option>
+        <option value="licences_index">證照數指數（102 年＝100）</option>
       </select>
     </label>
-    <label>縣市
-      <select id="f-county">
+    <label>表演類別
+      <select id="f-type">
         <option value="all">全部</option>
+        <option value="perform">表演藝術類</option>
+        <option value="visual">視覺藝術類</option>
+        <option value="craft">工藝藝術類</option>
       </select>
     </label>
-    <span class="note" id="filter-note"></span>
   </section>
 
   <section class="kpis">
     <div class="kpi card">
-      <div class="label">總展演場地數</div>
-      <div class="value"><span id="kpi-venue">–</span><small>處</small></div>
-      <div class="sub" id="kpi-venue-sub"></div>
+      <div class="label" id="kpi-lic-label">有效證照數</div>
+      <div class="value"><span id="kpi-lic">–</span><small>張</small></div>
+      <div class="sub" id="kpi-lic-sub"></div>
     </div>
     <div class="kpi card">
-      <div class="label">總發證藝人數</div>
-      <div class="value"><span id="kpi-total">–</span><small>人</small></div>
-      <div class="sub" id="kpi-total-sub"></div>
+      <div class="label" id="kpi-ven-label">表演場地數</div>
+      <div class="value"><span id="kpi-ven">–</span><small>處</small></div>
+      <div class="sub" id="kpi-ven-sub"></div>
+    </div>
+    <div class="kpi card">
+      <div class="label" id="kpi-lpv-label">每處場地平均證照數<span class="tag">標準化</span></div>
+      <div class="value"><span id="kpi-lpv">–</span><small>張/處</small></div>
+      <div class="sub" id="kpi-lpv-sub"></div>
+    </div>
+    <div class="kpi card">
+      <div class="label" id="kpi-type-label">開放該類別的場地</div>
+      <div class="value"><span id="kpi-type">–</span><small id="kpi-type-unit">處</small></div>
+      <div class="sub" id="kpi-type-sub"></div>
     </div>
   </section>
 
   <section class="charts">
     <div class="chart-card card">
-      <h2>各縣市發證總數比較</h2>
+      <h2 id="bar-title">歷年趨勢</h2>
       <p class="desc" id="bar-desc"></p>
-      <div class="chart" id="chart-bar" role="img" aria-label="各縣市發證總數橫向長條圖"></div>
-      <p class="foot">單位：人。依發證總數由多到少排序。</p>
+      <div class="chart" id="chart-bar" role="img" aria-label="歷年趨勢長條圖"></div>
+      <p class="foot" id="bar-foot"></p>
     </div>
     <div class="chart-card card">
-      <h2>藝人類別分佈</h2>
+      <h2>場地開放的表演類別組合</h2>
       <p class="desc" id="pie-desc"></p>
-      <div class="chart" id="chart-pie" role="img" aria-label="藝人類別分佈圓餅圖"></div>
-      <p class="foot">單位：人。百分比為三類別人數占合計的比例。</p>
+      <div class="chart" id="chart-pie" role="img" aria-label="場地開放類別組合圓餅圖"></div>
+      <p class="foot">單位：處。每個場地只歸入一種組合，各組合加總＝場地總數。場地名冊為下載時點資料，不受年度篩選影響。</p>
     </div>
   </section>
 
   <details class="card">
-    <summary>查看資料表</summary>
+    <summary>查看歷年資料表</summary>
     <div class="table-scroll">
       <table>
         <thead>
-          <tr><th>年度</th><th>縣市</th><th>展演場地(處)</th><th>音樂類(人)</th><th>表演藝術類(人)</th><th>視覺與工藝類(人)</th><th>合計(人)</th></tr>
+          <tr><th class="t-left">年度</th><th>有效證照數(張)</th><th>表演場地數(處)</th><th>每處場地平均證照數(張/處)</th><th>證照數指數(102=100)</th><th>證照數年增率</th><th class="t-left">備註</th></tr>
         </thead>
-        <tbody id="tbl-body"></tbody>
-        <tfoot id="tbl-foot"></tfoot>
+        <tbody id="tbl-year"></tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="card">
+    <summary id="venue-summary">查看場地名冊</summary>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th class="t-left">展演地</th><th class="t-left">主管機關</th><th class="t-left">開放組合</th><th class="t-left">附加限制</th><th class="t-left">原始開放類型</th></tr>
+        </thead>
+        <tbody id="tbl-venue"></tbody>
       </table>
     </div>
   </details>
 
   <footer class="card">
-    <h2>各縣市街頭藝人展演空間與發證數量之城鄉差異</h2>
+    <h2>臺北市街頭藝人展演類別與趨勢分析</h2>
     <dl>
       <dt>資料來源</dt>
-      <dd>各縣市政府文化局｜街頭藝人發證與展演場地統計</dd>
+      <dd>
+        <ul>
+          <li>臺北市政府主計處｜<a href="https://data.gov.tw/dataset/131207" target="_blank" rel="noopener">臺北市藝文館所及街頭藝人</a>（歷年證照數、場地數）</li>
+          <li>臺北市政府文化局｜<a href="https://data.gov.tw/dataset/136381" target="_blank" rel="noopener">臺北市街頭藝人展演場地資訊</a>（場地名冊、開放表演類型）</li>
+        </ul>
+      </dd>
       <dt>資料期間</dt>
-      <dd>民國 111 年至 112 年；涵蓋臺北市、新北市、臺中市、臺南市、高雄市、花蓮縣</dd>
+      <dd>歷年資料：民國 102 年至 114 年；場地名冊：2026 年 10 月 12 日下載之版本</dd>
       <dt>限制說明</dt>
-      <dd>本儀表板資料僅為作業展示用途，數據已簡化處理。年度選「全部」時為兩年度直接加總，同一場地或藝人可能被重複計入。</dd>
+      <dd>
+        <ul>
+          <li>本儀表板資料已加入標準化指標以利分析：每處場地平均證照數（有效證照數 ÷ 表演場地數）、以 102 年為 100 的證照數指數。</li>
+          <li>95–101 年原始檔的街頭藝人欄位皆為 0，實為尚未統計，已排除。</li>
+          <li>110 年有效證照數由 965 張增為 3,129 張（+224%），原始資料未說明原因，可能是統計口徑改變，跨此年度比較請小心。</li>
+          <li>場地名冊的「開放表演類型」為自由文字，本頁歸類為表演藝術、視覺藝術、工藝藝術三類；部分場地另有音量、樂器、人數等限制，詳見場地名冊。</li>
+          <li>場地名冊（72 處）與 114 年統計的表演場地數（73 處）時點不同，數字略有差異。</li>
+        </ul>
+      </dd>
     </dl>
   </footer>
 
@@ -208,112 +269,147 @@
 
 <script>
 (function () {
-  const YEARS = [...new Set(rawData.map(d => d.year))].sort((a, b) => a - b);
-  const LATEST = YEARS[YEARS.length - 1];
-  // 縣市選單依最新年度發證總數排序
-  const COUNTIES = rawData.filter(d => d.year === LATEST)
-    .sort((a, b) => b.total_count - a.total_count).map(d => d.county);
-  const CATS = [
-    { key: 'music_count',   name: '音樂類',     color: '--cat-1' },
-    { key: 'perform_count', name: '表演藝術類', color: '--cat-2' },
-    { key: 'visual_count',  name: '視覺與工藝類', color: '--cat-3' },
+  const YEARS = rawData.map(d => d.year);
+  const BASE = YEARS[0];
+  const METRICS = {
+    licences:           { name: '有效證照數', unit: '張', digits: 0 },
+    venues:             { name: '表演場地數', unit: '處', digits: 0 },
+    licences_per_venue: { name: '每處場地平均證照數', unit: '張/處', digits: 1 },
+    licences_index:     { name: '證照數指數', unit: `${BASE} 年＝100`, digits: 1 },
+  };
+  const TYPES = { perform: '表演藝術類', visual: '視覺藝術類', craft: '工藝藝術類' };
+  const COMBOS = [
+    { name: '三類皆可',   has: ['perform', 'visual', 'craft'], color: '--cat-1' },
+    { name: '僅表演藝術', has: ['perform'],                    color: '--cat-2' },
+    { name: '表演＋視覺', has: ['perform', 'visual'],          color: '--cat-3' },
+    { name: '視覺＋工藝', has: ['visual', 'craft'],            color: '--cat-4' },
   ];
+  const FLAG_YEAR = (rawData.find(d => d.flag) || {}).year;
 
-  const state = { year: 'all', county: 'all' };
-  const fmt = n => n.toLocaleString('zh-TW');
-  const sum = (rows, k) => rows.reduce((s, d) => s + d[k], 0);
+  const state = { from: BASE, to: YEARS[YEARS.length - 1], metric: 'licences', type: 'all' };
+  const fmt = (n, digits = 0) => n.toLocaleString('zh-TW', { minimumFractionDigits: digits, maximumFractionDigits: digits });
   const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const byYear = y => rawData.find(d => d.year === y);
 
   // 篩選器選項
-  const fYear = document.getElementById('f-year');
-  const fCounty = document.getElementById('f-county');
-  YEARS.forEach(y => fYear.add(new Option(y + ' 年', y)));
-  COUNTIES.forEach(c => fCounty.add(new Option(c, c)));
-
-  const byCounty = rows => state.county === 'all' ? rows : rows.filter(d => d.county === state.county);
-  const filtered = () => byCounty(rawData.filter(d => state.year === 'all' || d.year === +state.year));
-  const scopeText = () => (state.year === 'all' ? '111–112 年合計' : state.year + ' 年')
-    + '・' + (state.county === 'all' ? '6 縣市' : state.county);
+  const fFrom = document.getElementById('f-from');
+  const fTo = document.getElementById('f-to');
+  const fMetric = document.getElementById('f-metric');
+  const fType = document.getElementById('f-type');
+  YEARS.forEach(y => { fFrom.add(new Option(y + ' 年', y)); fTo.add(new Option(y + ' 年', y)); });
+  fFrom.value = state.from; fTo.value = state.to;
 
   const barChart = echarts.init(document.getElementById('chart-bar'));
   const pieChart = echarts.init(document.getElementById('chart-pie'));
 
-  function pctChange(a, b) {
-    if (!a) return '';
+  function change(a, b, digits = 1) {
     const p = (b - a) / a * 100;
+    if (!isFinite(p)) return '';
     const cls = p >= 0 ? 'up' : 'down';
-    const arrow = p >= 0 ? '▲' : '▼';
-    return `<span class="${cls}">${arrow} ${Math.abs(p).toFixed(1)}%</span>`;
+    return `<span class="${cls}">${p >= 0 ? '▲' : '▼'} ${Math.abs(p).toFixed(digits)}%</span>`;
   }
 
-  function renderKpis(rows) {
-    const keys = [['venue_count', 'kpi-venue', '處'], ['total_count', 'kpi-total', '人']];
-    const scoped = byCounty(rawData);
-    for (const [k, id, unit] of keys) {
-      document.getElementById(id).textContent = fmt(sum(rows, k));
-      const old = sum(scoped.filter(d => d.year === YEARS[0]), k);
-      const now = sum(scoped.filter(d => d.year === LATEST), k);
-      let sub;
-      if (state.year === 'all') {
-        sub = `${YEARS[0]} 年 ${fmt(old)} ${unit} → ${LATEST} 年 ${fmt(now)} ${unit} ${pctChange(old, now)}`;
-      } else if (+state.year === LATEST) {
-        sub = `較 ${YEARS[0]} 年 ${pctChange(old, now)}`;
-      } else {
-        sub = `${state.year} 年度（基期）`;
-      }
-      document.getElementById(id + '-sub').innerHTML = sub;
+  function renderKpis() {
+    const a = byYear(state.from), b = byYear(state.to);
+    const crossesFlag = FLAG_YEAR && state.from < FLAG_YEAR && state.to >= FLAG_YEAR;
+    const set = (id, key, digits) => {
+      document.getElementById(id).textContent = fmt(b[key], digits);
+      document.getElementById(id + '-label').firstChild.textContent = `${state.to} 年${METRICS[key].name}`;
+      document.getElementById(id + '-sub').innerHTML = state.from === state.to
+        ? `${state.to} 年度`
+        : `較 ${state.from} 年（${fmt(a[key], digits)}）${change(a[key], b[key])}`
+          + (crossesFlag && key !== 'venues' ? `<br>⚠ 跨 ${FLAG_YEAR} 年，統計口徑可能改變` : '');
+    };
+    set('kpi-lic', 'licences', 0);
+    set('kpi-ven', 'venues', 0);
+    set('kpi-lpv', 'licences_per_venue', 1);
+
+    const total = venueData.length;
+    const typeLabel = document.getElementById('kpi-type-label');
+    if (state.type === 'all') {
+      typeLabel.textContent = '場地名冊總數';
+      document.getElementById('kpi-type').textContent = fmt(total);
+      document.getElementById('kpi-type-unit').textContent = '處';
+      const restricted = venueData.filter(v => v.restricted).length;
+      document.getElementById('kpi-type-sub').textContent = `其中 ${restricted} 處對表演內容另有限制`;
+    } else {
+      const n = venueData.filter(v => v[state.type]).length;
+      typeLabel.textContent = `開放${TYPES[state.type]}的場地`;
+      document.getElementById('kpi-type').textContent = fmt(n);
+      document.getElementById('kpi-type-unit').textContent = '處';
+      document.getElementById('kpi-type-sub').textContent = `占全部 ${total} 處的 ${(n / total * 100).toFixed(1)}%`;
     }
   }
 
-  function renderBar(rows, full) {
-    const years = state.year === 'all' ? YEARS : [+state.year];
-    const latest = years[years.length - 1];
-    const val = (y, c) => (rows.find(d => d.year === y && d.county === c) || {}).total_count || 0;
-    const counties = [...new Set(rows.map(d => d.county))]
-      .sort((a, b) => val(latest, b) - val(latest, a));
-    const yearColor = y => css(years.length === 1 || y === LATEST ? '--year-new' : '--year-old');
+  function renderBar(full) {
+    const m = METRICS[state.metric];
+    const rows = rawData.filter(d => d.year >= state.from && d.year <= state.to);
+    const showFlag = FLAG_YEAR && state.from < FLAG_YEAR && state.to >= FLAG_YEAR && state.metric !== 'venues';
 
     const option = {
       animationDurationUpdate: 500,
       animationEasingUpdate: 'cubicInOut',
-      grid: { left: 8, right: 56, top: years.length > 1 ? 36 : 12, bottom: 36, containLabel: true },
-      legend: {
-        show: years.length > 1, top: 0, left: 0, icon: 'roundRect', itemWidth: 12, itemHeight: 12,
-        textStyle: { color: css('--text-secondary') },
-      },
+      grid: { left: 8, right: 16, top: 44, bottom: 40, containLabel: true },
       tooltip: {
         trigger: 'axis', axisPointer: { type: 'shadow' },
-        valueFormatter: v => fmt(v) + ' 人',
+        formatter: ps => {
+          const d = byYear(+ps[0].name);
+          const yoy = state.metric === 'venues' ? d.venues_yoy_pct : d.licences_yoy_pct;
+          let s = `<b>${d.year} 年</b><br>${m.name}：<b>${fmt(ps[0].value, m.digits)}</b> ${m.unit}`;
+          if (yoy !== null && (state.metric === 'licences' || state.metric === 'venues')) {
+            s += `<br>年增率：${yoy > 0 ? '+' : ''}${yoy}%`;
+          }
+          if (d.flag && state.metric !== 'venues') s += `<br>⚠ ${d.flag}`;
+          return s;
+        },
       },
       xAxis: {
-        type: 'value', name: '發證藝人數（人）', nameLocation: 'middle', nameGap: 26,
+        type: 'category', data: rows.map(d => String(d.year)),
+        name: '年度（民國）', nameLocation: 'middle', nameGap: 28,
         nameTextStyle: { color: css('--text-secondary') },
         axisLabel: { color: css('--text-muted'), hideOverlap: true },
-        splitLine: { lineStyle: { color: css('--grid') } },
-      },
-      yAxis: {
-        type: 'category', inverse: true, data: counties,
-        axisLabel: { color: css('--text-primary'), fontSize: 13 },
         axisLine: { lineStyle: { color: css('--axis') } }, axisTick: { show: false },
       },
-      series: years.map(y => ({
-        id: 'y' + y, name: y + ' 年', type: 'bar',
-        data: counties.map(c => val(y, c)),
-        barMaxWidth: 22, barGap: '15%',
-        itemStyle: { color: yearColor(y), borderRadius: [0, 4, 4, 0] },
+      yAxis: {
+        type: 'value', name: `${m.name}（${m.unit}）`, nameLocation: 'end', nameGap: 12,
+        nameTextStyle: { color: css('--text-secondary'), align: 'left' },
+        axisLabel: { color: css('--text-muted'), formatter: v => fmt(v) },
+        splitLine: { lineStyle: { color: css('--grid') } },
+      },
+      series: [{
+        id: 'trend', name: m.name, type: 'bar', barMaxWidth: 36,
+        data: rows.map(d => ({
+          value: d[state.metric],
+          itemStyle: {
+            color: css('--bar'), borderRadius: [4, 4, 0, 0],
+          },
+        })),
         label: {
-          show: true, position: 'right', color: css('--text-secondary'), fontSize: 11,
-          formatter: p => fmt(p.value),
+          show: true, position: 'top', color: css('--text-secondary'), fontSize: 11,
+          formatter: p => fmt(p.value, m.digits),
         },
-      })),
+        labelLayout: { hideOverlap: true },
+        markLine: showFlag ? {
+          silent: true, symbol: 'none',
+          lineStyle: { color: css('--warn'), type: 'dashed', width: 1.5 },
+          label: { formatter: '口徑可能改變', color: css('--warn'), fontSize: 11, position: 'end' },
+          data: [{ xAxis: String(FLAG_YEAR) }],
+        } : { data: [] },
+      }],
     };
-    barChart.setOption(option, full ? { notMerge: true } : { replaceMerge: ['series'] });
-    document.getElementById('bar-desc').textContent =
-      scopeText() + (years.length > 1 ? '；兩年度並列比較' : '');
+    barChart.setOption(option, full ? { notMerge: true } : undefined);
+
+    document.getElementById('bar-title').textContent = `歷年${m.name}`;
+    document.getElementById('bar-desc').textContent = `${state.from}–${state.to} 年`;
+    document.getElementById('bar-foot').innerHTML = `單位：${m.unit}。`
+      + (state.metric === 'licences_per_venue' ? '每處場地平均證照數＝有效證照數 ÷ 表演場地數。' : '')
+      + (showFlag ? `<span class="warn">虛線標示 ${FLAG_YEAR} 年，證照數單年增加超過一倍，前後年度比較請小心。</span>` : '');
   }
 
-  function renderPie(rows, full) {
-    const total = sum(rows, 'total_count');
+  function renderPie(full) {
+    const total = venueData.length;
+    const match = c => state.type === 'all' || c.has.includes(state.type);
+    const matched = COMBOS.filter(match).reduce((s, c) => s + venueData.filter(v => v.combo === c.name).length, 0);
     const option = {
       animationDurationUpdate: 500,
       animationEasingUpdate: 'cubicInOut',
@@ -323,55 +419,77 @@
       },
       tooltip: {
         trigger: 'item',
-        formatter: p => `${p.marker}${p.name}<br><b>${fmt(p.value)} 人</b>（${p.percent.toFixed(1)}%）`,
+        formatter: p => `${p.marker}${p.name}<br><b>${p.value} 處</b>（${p.percent.toFixed(1)}%）`,
       },
       title: {
-        text: fmt(total), subtext: '合計（人）', left: 'center', top: '38%',
+        text: fmt(state.type === 'all' ? total : matched),
+        subtext: state.type === 'all' ? '場地總數（處）' : `可${TYPES[state.type].replace('類', '')}（處）`,
+        left: 'center', top: '37%',
         textStyle: { color: css('--text-primary'), fontSize: 22, fontWeight: 700 },
         subtextStyle: { color: css('--text-muted'), fontSize: 12 },
         itemGap: 2,
       },
       series: [{
-        id: 'mix', type: 'pie', radius: ['38%', '60%'], center: ['50%', '46%'],
+        id: 'combo', type: 'pie', radius: ['38%', '60%'], center: ['50%', '45%'],
         itemStyle: { borderColor: css('--surface'), borderWidth: 2, borderRadius: 4 },
         label: {
-          color: css('--text-primary'), formatter: p => p.name + '\n' + p.percent.toFixed(1) + '%', fontSize: 12, lineHeight: 16,
+          color: css('--text-primary'), fontSize: 12, lineHeight: 16,
+          formatter: p => `${p.name}\n${p.value} 處・${p.percent.toFixed(1)}%`,
           alignTo: 'edge', edgeDistance: 4, overflow: 'none',
         },
         labelLine: { lineStyle: { color: css('--axis') } },
-        data: CATS.map(c => ({
-          name: c.name, value: sum(rows, c.key), itemStyle: { color: css(c.color) },
+        data: COMBOS.map(c => ({
+          name: c.name,
+          value: venueData.filter(v => v.combo === c.name).length,
+          // 不含所選類別的組合淡化，顏色不變（顏色跟著組合走）
+          itemStyle: { color: css(c.color), opacity: match(c) ? 1 : 0.2 },
+          label: { opacity: match(c) ? 1 : 0.4 },
         })),
       }],
     };
     pieChart.setOption(option, full ? { notMerge: true } : undefined);
-    document.getElementById('pie-desc').textContent = scopeText();
+    document.getElementById('pie-desc').textContent = state.type === 'all'
+      ? `共 ${total} 處場地`
+      : `突顯開放${TYPES[state.type]}的組合：${matched} / ${total} 處`;
   }
 
-  function renderTable(rows) {
-    const sorted = [...rows].sort((a, b) => a.year - b.year || b.total_count - a.total_count);
-    const cols = ['venue_count', 'music_count', 'perform_count', 'visual_count', 'total_count'];
-    document.getElementById('tbl-body').innerHTML = sorted.map(d =>
-      `<tr><td>${d.year}</td><td>${d.county}</td>${cols.map(k => `<td>${fmt(d[k])}</td>`).join('')}</tr>`
-    ).join('');
-    document.getElementById('tbl-foot').innerHTML =
-      `<tr><td colspan="2">合計</td>${cols.map(k => `<td>${fmt(sum(rows, k))}</td>`).join('')}</tr>`;
+  function renderTables() {
+    document.getElementById('tbl-year').innerHTML = rawData
+      .filter(d => d.year >= state.from && d.year <= state.to)
+      .map(d => `<tr><td class="t-left">${d.year}</td><td>${fmt(d.licences)}</td><td>${fmt(d.venues)}</td>`
+        + `<td>${fmt(d.licences_per_venue, 2)}</td><td>${fmt(d.licences_index, 1)}</td>`
+        + `<td>${d.licences_yoy_pct === null ? '–' : (d.licences_yoy_pct > 0 ? '+' : '') + d.licences_yoy_pct + '%'}</td>`
+        + `<td class="t-left">${d.flag || ''}</td></tr>`).join('');
+
+    const vs = venueData.filter(v => state.type === 'all' || v[state.type]);
+    document.getElementById('venue-summary').textContent =
+      `查看場地名冊（${state.type === 'all' ? '全部' : TYPES[state.type]}，${vs.length} 處）`;
+    document.getElementById('tbl-venue').innerHTML = vs.map(v =>
+      `<tr><td class="t-left">${v.venue}</td><td class="t-left">${v.agency}</td><td class="t-left">${v.combo}</td>`
+      + `<td class="t-left">${v.restricted ? '有' : '–'}</td><td class="wrap-cell">${v.types_raw}</td></tr>`).join('');
   }
 
   function render(full) {
-    const rows = filtered();
-    renderKpis(rows);
-    renderBar(rows, full);
-    renderPie(rows, full);
-    renderTable(rows);
-    document.getElementById('filter-note').textContent =
-      state.year === 'all' ? '「全部」年度為兩年度加總' : '';
+    renderKpis();
+    renderBar(full);
+    renderPie(full);
+    renderTables();
   }
 
-  fYear.addEventListener('change', () => { state.year = fYear.value; render(false); });
-  fCounty.addEventListener('change', () => { state.county = fCounty.value; render(false); });
+  // 起訖年度互相約束：起始不可晚於結束
+  fFrom.addEventListener('change', () => {
+    state.from = +fFrom.value;
+    if (state.from > state.to) { state.to = state.from; fTo.value = state.to; }
+    render(false);
+  });
+  fTo.addEventListener('change', () => {
+    state.to = +fTo.value;
+    if (state.to < state.from) { state.from = state.to; fFrom.value = state.from; }
+    render(false);
+  });
+  fMetric.addEventListener('change', () => { state.metric = fMetric.value; render(false); });
+  fType.addEventListener('change', () => { state.type = fType.value; render(false); });
   window.addEventListener('resize', () => { barChart.resize(); pieChart.resize(); });
-  // 系統切換深色/淺色模式時，重新套用配色
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => render(true));
 
   render(true);
